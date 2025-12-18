@@ -4,9 +4,10 @@
 
 ## 特性
 
-- 🚀 高性能：基于 Go 语言，支持高并发写入
+- 🚀 高性能：基于 Go 语言和 Gin 框架，支持高并发写入
   - HTTP 连接池：最大 100 个连接，每个主机 50 个连接
   - 连接复用：启用 Keep-Alive，减少连接建立开销
+  - 优雅关闭：支持优雅关闭（graceful shutdown），确保请求处理完成后再关闭
   - 结构化日志：使用 `slog` 结构化日志，支持 JSON 格式，便于日志收集和分析
   - 日志级别控制：支持 `debug`, `info`, `warn`, `error` 级别，生产环境默认减少日志输出
 - 📦 容器化：支持 Docker 和 Docker Compose 部署
@@ -261,6 +262,7 @@ docker pull ghcr.io/OWNER/doris-webhook:latest
 - `CORS_MAX_AGE`: 预检请求缓存时间，单位秒（默认: `3600`）
 - `LOG_LEVEL`: 日志级别（默认: `info`），可选值：`debug`, `info`, `warn`, `error`
 - `LOG_FORMAT`: 日志格式（默认: `text`），可选值：`text`, `json`（JSON 格式更适合日志收集系统）
+- `GIN_MODE`: Gin 框架模式（默认: `release`），可选值：`debug`, `release`, `test`
 - `DEBUG`: 调试模式（默认: `false`），设置为 `true` 时输出详细调试日志
 
 ### 配置说明
