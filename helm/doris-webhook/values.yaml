@@ -1,0 +1,159 @@
+# Default values for doris-webhook
+# This is a YAML-formatted file.
+
+# 命名空间（默认：devops）
+namespace: devops
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/kevin197011/doris-webhook
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: doris-webhook.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: doris-webhook-tls
+  #    hosts:
+  #      - doris-webhook.local
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Doris 配置
+doris:
+  # BE HTTP 地址（必需）
+  beHttp: "10.170.2.56:8040"
+  # 数据库名
+  database: "video"
+  # 用户名
+  user: "devops"
+  # 密码（必需，如果 secret.create=false 则直接使用此密码）
+  password: ""
+
+# Secret 配置（可选，如果不需要 Secret 可以设置为 false）
+secret:
+  # 是否创建 Secret（设置为 false 则不使用 Secret，直接使用 doris.password）
+  create: false
+  # Secret 名称（如果为空，使用默认名称）
+  name: ""
+  # 密码（如果设置了 secret.create=true，会创建包含此密码的 Secret）
+  password: ""
+
+# 环境变量（可选，会覆盖上面的配置）
+env: []
+  # - name: DORIS_BE_HTTP
+  #   value: "10.170.2.56:8040"
+  # - name: DORIS_DATABASE
+  #   value: "video"
+
+# 健康检查配置
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Istio 配置
+istio:
+  # 是否启用 Istio VirtualService
+  enabled: true
+  # VirtualService 的 hosts（必需）
+  hosts:
+    - doris-webhook.local
+  # Gateways（可选，如果不设置则只适用于网格内部）
+  gateways: []
+    # - istio-system/infra-istio-ingressgateway-extra
+  # 路由匹配规则（可选）
+  match: []
+    # - uri:
+    #     prefix: /video
+  # 超时设置（可选）
+  timeout: "30s"
+  # 重试配置（可选）
+  retries:
+    attempts: 3
+    perTryTimeout: "10s"
+    retryOn: "5xx,reset,connect-failure,refused-stream"
+  # CORS 配置（可选）
+  corsPolicy: {}
+    # allowOrigins:
+    #   - exact: "*"
+    # allowMethods:
+    #   - GET
+    #   - POST
+    # allowHeaders:
+    #   - content-type
+    # maxAge: "24h"
+

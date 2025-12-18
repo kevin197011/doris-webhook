@@ -1,0 +1,17 @@
+apiVersion: v2
+name: doris-webhook
+description: A lightweight HTTP Webhook service for writing data to Apache Doris via Stream Load API
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - doris
+  - webhook
+  - stream-load
+  - data-ingestion
+maintainers:
+  - name: doris-webhook
+home: https://github.com/your-org/doris-webhook
+sources:
+  - https://github.com/your-org/doris-webhook
+
