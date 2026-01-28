@@ -1,0 +1,418 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "doris-video-metrics-simple",
+    "title": "Video Metrics Dashboard (无时间字段版本)",
+    "tags": ["doris", "video", "metrics"],
+    "style": "dark",
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "type": "piechart",
+        "title": "项目分布",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  project as label,\n  COUNT(*) as value\nFROM video_metrics\nGROUP BY project\nORDER BY value DESC\nLIMIT 20",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "pieType": "pie",
+          "tooltip": {"mode": "single"},
+          "legend": {"displayMode": "table", "placement": "right", "showLegend": true}
+        }
+      },
+      {
+        "id": 2,
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "type": "piechart",
+        "title": "事件类型分布",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  event as label,\n  COUNT(*) as value\nFROM video_metrics\nGROUP BY event\nORDER BY value DESC",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "pieType": "pie",
+          "tooltip": {"mode": "single"},
+          "legend": {"displayMode": "table", "placement": "right", "showLegend": true}
+        }
+      },
+      {
+        "id": 3,
+        "gridPos": {"x": 0, "y": 8, "w": 6, "h": 4},
+        "type": "stat",
+        "title": "总事件数",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT COUNT(*) as value FROM video_metrics",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "gridPos": {"x": 6, "y": 8, "w": 6, "h": 4},
+        "type": "stat",
+        "title": "项目数",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT COUNT(DISTINCT project) as value FROM video_metrics",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "blue", "value": null}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "gridPos": {"x": 12, "y": 8, "w": 6, "h": 4},
+        "type": "stat",
+        "title": "事件类型数",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT COUNT(DISTINCT event) as value FROM video_metrics",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "purple", "value": null}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "gridPos": {"x": 18, "y": 8, "w": 6, "h": 4},
+        "type": "stat",
+        "title": "唯一用户代理数",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT COUNT(DISTINCT user_agent) as value FROM video_metrics",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "orange", "value": null}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+        "type": "barchart",
+        "title": "项目事件统计（Top 10）",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  project as label,\n  COUNT(*) as value\nFROM video_metrics\nGROUP BY project\nORDER BY value DESC\nLIMIT 10",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "xTickLabelRotation": 0,
+          "xTickLabelSpacing": 0,
+          "showLegend": false,
+          "legend": {"displayMode": "list", "placement": "bottom"}
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "hideFrom": {"tooltip": false, "viz": false, "legend": false}
+            },
+            "mappings": [],
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 8,
+        "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+        "type": "barchart",
+        "title": "事件类型统计",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  event as label,\n  COUNT(*) as value\nFROM video_metrics\nGROUP BY event\nORDER BY value DESC",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "xTickLabelRotation": 0,
+          "xTickLabelSpacing": 0,
+          "showLegend": false,
+          "legend": {"displayMode": "list", "placement": "bottom"}
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "hideFrom": {"tooltip": false, "viz": false, "legend": false}
+            },
+            "mappings": [],
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 9,
+        "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+        "type": "table",
+        "title": "项目详细统计",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  project as '项目',\n  COUNT(*) as '总事件数',\n  COUNT(DISTINCT event) as '事件类型数',\n  COUNT(DISTINCT user_agent) as '用户代理数',\n  ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM video_metrics), 2) as '占比(%)'\nFROM video_metrics\nGROUP BY project\nORDER BY COUNT(*) DESC",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"desc": true, "displayName": "总事件数"}]
+        }
+      },
+      {
+        "id": 10,
+        "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+        "type": "table",
+        "title": "事件类型详细统计",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  event as '事件类型',\n  COUNT(*) as '事件数',\n  COUNT(DISTINCT project) as '项目数',\n  COUNT(DISTINCT user_agent) as '用户代理数',\n  ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM video_metrics), 2) as '占比(%)'\nFROM video_metrics\nGROUP BY event\nORDER BY COUNT(*) DESC",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"desc": true, "displayName": "事件数"}]
+        }
+      },
+      {
+        "id": 11,
+        "gridPos": {"x": 0, "y": 28, "w": 24, "h": 8},
+        "type": "table",
+        "title": "项目 x 事件类型交叉统计",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  project as '项目',\n  event as '事件类型',\n  COUNT(*) as '事件数',\n  ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (PARTITION BY project), 2) as '项目内占比(%)',\n  ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM video_metrics), 2) as '总占比(%)'\nFROM video_metrics\nGROUP BY project, event\nORDER BY project, COUNT(*) DESC",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {"desc": false, "displayName": "项目"},
+            {"desc": true, "displayName": "事件数"}
+          ]
+        }
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "templating": {
+      "list": [
+        {
+          "name": "project",
+          "type": "query",
+          "datasource": {"type": "mysql", "uid": "doris"},
+          "definition": "SELECT DISTINCT project FROM video_metrics ORDER BY project",
+          "query": "SELECT DISTINCT project FROM video_metrics ORDER BY project",
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "options": [],
+          "includeAll": true,
+          "multi": true,
+          "allValue": null,
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0
+        },
+        {
+          "name": "event",
+          "type": "query",
+          "datasource": {"type": "mysql", "uid": "doris"},
+          "definition": "SELECT DISTINCT event FROM video_metrics ORDER BY event",
+          "query": "SELECT DISTINCT event FROM video_metrics ORDER BY event",
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "options": [],
+          "includeAll": true,
+          "multi": true,
+          "allValue": null,
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0
+        }
+      ]
+    },
+    "annotations": {
+      "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "liveNow": false,
+    "weekStart": ""
+  }
+}

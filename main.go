@@ -57,6 +57,7 @@ type VideoData struct {
 	Project   string `json:"project"`
 	Event     string `json:"event"`
 	UserAgent string `json:"user_agent"`
+	EventTime string `json:"event_time,omitempty"` // 事件时间，格式：YYYY-MM-DD HH:MM:SS
 }
 
 // DorisClient Doris 客户端封装
@@ -234,7 +235,7 @@ func (dc *DorisClient) WriteToDoris(ctx context.Context, data []byte, logger *sl
 	req.Header.Set("label", uuid.New().String())
 	req.Header.Set("format", "json")
 	req.Header.Set("read_json_by_line", "true")
-	req.Header.Set("columns", "project,event,user_agent")
+	req.Header.Set("columns", "project,event,user_agent,event_time")
 
 	resp, err := dc.client.Do(req)
 	if err != nil {
@@ -366,10 +367,13 @@ func (app *App) videoHandler(c *gin.Context) {
 	}
 
 	// 转换为 Doris 数据格式并序列化
+	// 使用当前时间作为事件时间
+	eventTime := time.Now().Format("2006-01-02 15:04:05")
 	jsonData, err := json.Marshal(VideoData{
 		Project:   req.Project,
 		Event:     req.Event,
 		UserAgent: req.UserAgent,
+		EventTime: eventTime,
 	})
 	if err != nil {
 		app.logger.Error("序列化数据失败", "error", err)

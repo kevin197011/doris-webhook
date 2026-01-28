@@ -1,0 +1,399 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "doris-video-metrics",
+    "title": "Video Metrics Dashboard",
+    "tags": ["doris", "video", "metrics"],
+    "style": "dark",
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "gridPos": {"x": 0, "y": 0, "w": 24, "h": 8},
+        "type": "timeseries",
+        "title": "总事件数 - 时间序列",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:%s') as time,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY time\nORDER BY time",
+            "refId": "A",
+            "sql": {
+              "columns": [
+                {"parameters": [], "type": "function"},
+                {"parameters": [], "type": "function"}
+              ],
+              "groupBy": [
+                {"property": {"type": "string"}, "type": "groupBy"}
+              ],
+              "limit": 50
+            }
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideFrom": {"tooltip": false, "viz": false, "legend": false},
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {"type": "linear"},
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {"group": "A", "mode": "none"},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "red", "value": 80}
+              ]
+            },
+            "unit": "short"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "single"},
+          "legend": {"calcs": ["lastNotNull", "max", "min"], "displayMode": "table", "placement": "bottom"}
+        }
+      },
+      {
+        "id": 2,
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+        "type": "timeseries",
+        "title": "按项目分组 - 事件数",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:%s') as time,\n  project as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY time, project\nORDER BY time, project",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideFrom": {"tooltip": false, "viz": false, "legend": false},
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {"type": "linear"},
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {"group": "A", "mode": "normal"},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "unit": "short"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}
+        }
+      },
+      {
+        "id": 3,
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+        "type": "timeseries",
+        "title": "按事件类型分组 - 事件数",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:%s') as time,\n  event as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY time, event\nORDER BY time, event",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "palette-classic"},
+            "custom": {
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "line",
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "hideFrom": {"tooltip": false, "viz": false, "legend": false},
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {"type": "linear"},
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {"group": "A", "mode": "normal"},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "unit": "short"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}
+        }
+      },
+      {
+        "id": 4,
+        "gridPos": {"x": 0, "y": 16, "w": 8, "h": 8},
+        "type": "piechart",
+        "title": "项目分布",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  project as label,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY project\nORDER BY value DESC",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "pieType": "pie",
+          "tooltip": {"mode": "single"},
+          "legend": {"displayMode": "table", "placement": "right"}
+        }
+      },
+      {
+        "id": 5,
+        "gridPos": {"x": 8, "y": 16, "w": 8, "h": 8},
+        "type": "piechart",
+        "title": "事件类型分布",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  event as label,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY event\nORDER BY value DESC",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "pieType": "pie",
+          "tooltip": {"mode": "single"},
+          "legend": {"displayMode": "table", "placement": "right"}
+        }
+      },
+      {
+        "id": 6,
+        "gridPos": {"x": 16, "y": 16, "w": 8, "h": 8},
+        "type": "stat",
+        "title": "总事件数",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT COUNT(*) as value FROM video_metrics WHERE $__timeFilter(event_time)",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "textMode": "auto"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "thresholds"},
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"color": "green", "value": null}
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "id": 7,
+        "gridPos": {"x": 0, "y": 24, "w": 12, "h": 8},
+        "type": "table",
+        "title": "项目事件统计",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  project as '项目',\n  COUNT(*) as '事件数',\n  COUNT(DISTINCT event) as '事件类型数',\n  COUNT(DISTINCT user_agent) as '用户代理数'\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY project\nORDER BY COUNT(*) DESC",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"desc": true, "displayName": "事件数"}]
+        }
+      },
+      {
+        "id": 8,
+        "gridPos": {"x": 12, "y": 24, "w": 12, "h": 8},
+        "type": "table",
+        "title": "事件类型统计",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  event as '事件类型',\n  COUNT(*) as '事件数',\n  COUNT(DISTINCT project) as '项目数',\n  ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM video_metrics WHERE $__timeFilter(event_time)), 2) as '占比(%)'\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY event\nORDER BY COUNT(*) DESC",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [{"desc": true, "displayName": "事件数"}]
+        }
+      },
+      {
+        "id": 9,
+        "gridPos": {"x": 0, "y": 32, "w": 24, "h": 8},
+        "type": "timeseries",
+        "title": "项目 x 事件类型 - 热力图",
+        "targets": [
+          {
+            "datasource": {"type": "mysql", "uid": "doris"},
+            "editorMode": "code",
+            "format": "table",
+            "rawQuery": true,
+            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:%s') as time,\n  CONCAT(project, ' - ', event) as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY time, project, event\nORDER BY time",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {"mode": "continuous-GrYlRd"},
+            "custom": {
+              "axisLabel": "",
+              "axisPlacement": "auto",
+              "barAlignment": 0,
+              "drawStyle": "bars",
+              "fillOpacity": 100,
+              "gradientMode": "opacity",
+              "hideFrom": {"tooltip": false, "viz": false, "legend": false},
+              "lineInterpolation": "linear",
+              "lineWidth": 1,
+              "pointSize": 5,
+              "scaleDistribution": {"type": "linear"},
+              "showPoints": "never",
+              "spanNulls": false,
+              "stacking": {"group": "A", "mode": "none"},
+              "thresholdsStyle": {"mode": "off"}
+            },
+            "mappings": [],
+            "unit": "short"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}
+        }
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "templating": {
+      "list": [
+        {
+          "name": "project",
+          "type": "query",
+          "datasource": {"type": "mysql", "uid": "doris"},
+          "definition": "SELECT DISTINCT project FROM video_metrics ORDER BY project",
+          "query": "SELECT DISTINCT project FROM video_metrics ORDER BY project",
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "options": [],
+          "includeAll": true,
+          "multi": true,
+          "allValue": null,
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0
+        },
+        {
+          "name": "event",
+          "type": "query",
+          "datasource": {"type": "mysql", "uid": "doris"},
+          "definition": "SELECT DISTINCT event FROM video_metrics ORDER BY event",
+          "query": "SELECT DISTINCT event FROM video_metrics ORDER BY event",
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          },
+          "options": [],
+          "includeAll": true,
+          "multi": true,
+          "allValue": null,
+          "refresh": 1,
+          "regex": "",
+          "skipUrlSync": false,
+          "sort": 0
+        }
+      ]
+    },
+    "annotations": {
+      "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "links": [],
+    "liveNow": false,
+    "weekStart": ""
+  }
+}
