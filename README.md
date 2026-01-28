@@ -318,7 +318,7 @@ curl -X POST http://localhost:8080/video \
 ```
 
 **响应状态码：**
-- `202 Accepted`: 数据写入成功
+- `200 OK`: 数据写入成功
 - `400 Bad Request`: 请求格式错误（JSON 格式无效或字段缺失）
 - `405 Method Not Allowed`: 请求方法不正确（仅支持 POST）
 - `415 Unsupported Media Type`: Content-Type 不正确
