@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -21,8 +22,19 @@ import (
 )
 
 const (
-	videoTable = "video_metrics"
-	listenPort = ":8080"
+	videoTable        = "video_metrics"
+	listenPort        = ":8080"
+	maxRedirects      = 10
+	defaultTimeout    = 30 * time.Second
+	shutdownTimeout   = 5 * time.Second
+	readTimeout       = 10 * time.Second
+	writeTimeout      = 30 * time.Second
+	idleTimeout       = 120 * time.Second
+	maxHeaderBytes    = 1 << 20 // 1MB
+	maxIdleConns      = 100
+	maxIdleConnsPerHost = 50
+	maxConnsPerHost   = 100
+	idleConnTimeout   = 90 * time.Second
 )
 
 // Config Doris 配置
@@ -47,29 +59,55 @@ type VideoData struct {
 	UserAgent string `json:"user_agent"`
 }
 
-var (
+// DorisClient Doris 客户端封装
+type DorisClient struct {
+	config     *Config
+	client     *http.Client
+	streamURL  string
+	authHeader string
+	once       sync.Once
+}
+
+// App 应用主结构
+type App struct {
 	config      *Config
 	logger      *slog.Logger
-	dorisClient = &http.Client{
-		Transport: &http.Transport{
-			MaxIdleConns:        100,              // 增大总连接池（默认 100）
-			MaxIdleConnsPerHost: 50,               // 增大每个主机的连接池（默认 2）
-			MaxConnsPerHost:     100,              // 限制每个主机的最大连接数
-			IdleConnTimeout:     90 * time.Second, // 增加空闲连接超时（默认 90s）
-			DisableKeepAlives:   false,            // 启用连接复用
-			DisableCompression:  true,             // 禁用压缩（Doris 不需要）
-		},
-		Timeout: 30 * time.Second, // 增加超时时间以适应 Doris 处理时间
-		// 自动跟随重定向
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			// 允许最多 10 次重定向
-			if len(via) >= 10 {
-				return fmt.Errorf("重定向次数过多")
-			}
-			return nil
+	dorisClient *DorisClient
+}
+
+// NewDorisClient 创建 Doris 客户端
+func NewDorisClient(cfg *Config) *DorisClient {
+	dc := &DorisClient{
+		config: cfg,
+		client: &http.Client{
+			Transport: &http.Transport{
+				MaxIdleConns:        maxIdleConns,
+				MaxIdleConnsPerHost: maxIdleConnsPerHost,
+				MaxConnsPerHost:     maxConnsPerHost,
+				IdleConnTimeout:     idleConnTimeout,
+				DisableKeepAlives:   false,
+				DisableCompression:  true,
+			},
+			Timeout: defaultTimeout,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				if len(via) >= maxRedirects {
+					return fmt.Errorf("重定向次数过多")
+				}
+				return nil
+			},
 		},
 	}
-)
+	// 延迟初始化 URL 和 auth header
+	dc.once.Do(dc.init)
+	return dc
+}
+
+// init 初始化 URL 和认证头（延迟初始化，只执行一次）
+func (dc *DorisClient) init() {
+	dc.streamURL = fmt.Sprintf("%s/api/%s/%s/_stream_load", dc.config.BEHTTP, dc.config.DB, videoTable)
+	auth := base64.StdEncoding.EncodeToString([]byte(dc.config.User + ":" + dc.config.Passwd))
+	dc.authHeader = "Basic " + auth
+}
 
 // loadConfig 加载配置
 func loadConfig() (*Config, error) {
@@ -105,8 +143,12 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
+var (
+	logger *slog.Logger // 全局 logger（向后兼容）
+)
+
 // initLogger 初始化日志记录器
-func initLogger() {
+func initLogger() *slog.Logger {
 	// 获取日志级别
 	levelStr := getEnv("LOG_LEVEL", "info")
 	var level slog.Level
@@ -130,11 +172,14 @@ func initLogger() {
 
 	// 根据环境变量选择日志格式
 	// JSON 格式更适合生产环境和日志收集系统
+	var l *slog.Logger
 	if getEnv("LOG_FORMAT", "text") == "json" {
-		logger = slog.New(slog.NewJSONHandler(os.Stdout, opts))
+		l = slog.New(slog.NewJSONHandler(os.Stdout, opts))
 	} else {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
+		l = slog.New(slog.NewTextHandler(os.Stdout, opts))
 	}
+	logger = l // 设置全局 logger
+	return l
 }
 
 // maskPassword 隐藏密码
@@ -165,17 +210,16 @@ type StreamLoadResponse struct {
 	ErrorURL               string `json:"ErrorURL"`
 }
 
-// writeToDoris 写入数据到 Doris BE
+// WriteToDoris 写入数据到 Doris BE
 // 直接连接 BE HTTP 端口进行 Stream Load，不经过 FE
-func writeToDoris(data []byte) error {
-	url := fmt.Sprintf("%s/api/%s/%s/_stream_load", config.BEHTTP, config.DB, videoTable)
+func (dc *DorisClient) WriteToDoris(ctx context.Context, data []byte, logger *slog.Logger) error {
 	isDebug := getEnv("DEBUG", "false") == "true"
 
 	if isDebug {
-		logger.Debug("向 Doris BE 发送请求", "url", url, "data", string(data))
+		logger.Debug("向 Doris BE 发送请求", "url", dc.streamURL, "data", string(data))
 	}
 
-	req, err := http.NewRequest("PUT", url, bytes.NewReader(data))
+	req, err := http.NewRequestWithContext(ctx, "PUT", dc.streamURL, bytes.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("创建请求失败: %w", err)
 	}
@@ -184,17 +228,15 @@ func writeToDoris(data []byte) error {
 	req.ContentLength = int64(len(data))
 
 	// 设置请求头（与 curl 脚本保持一致）
-	auth := base64.StdEncoding.EncodeToString([]byte(config.User + ":" + config.Passwd))
-	req.Header.Set("Authorization", "Basic "+auth)
+	req.Header.Set("Authorization", dc.authHeader)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Expect", "100-continue")
-	label := uuid.New().String()
-	req.Header.Set("label", label)
+	req.Header.Set("label", uuid.New().String())
 	req.Header.Set("format", "json")
 	req.Header.Set("read_json_by_line", "true")
 	req.Header.Set("columns", "project,event,user_agent")
 
-	resp, err := dorisClient.Do(req)
+	resp, err := dc.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("doris 连接失败: %w", err)
 	}
@@ -238,7 +280,7 @@ func writeToDoris(data []byte) error {
 }
 
 // setupRouter 设置路由
-func setupRouter() *gin.Engine {
+func (app *App) setupRouter() *gin.Engine {
 	// 根据环境变量设置 Gin 模式
 	ginMode := getEnv("GIN_MODE", "release")
 	gin.SetMode(ginMode)
@@ -246,7 +288,7 @@ func setupRouter() *gin.Engine {
 	r := gin.New()
 
 	// 使用自定义日志中间件（使用 slog）
-	r.Use(ginLogger())
+	r.Use(app.ginLogger())
 	r.Use(gin.Recovery())
 
 	// 配置 CORS
@@ -268,13 +310,13 @@ func setupRouter() *gin.Engine {
 	})
 
 	// 视频数据写入端点
-	r.POST("/video", videoHandler)
+	r.POST("/video", app.videoHandler)
 
 	return r
 }
 
 // ginLogger 自定义日志中间件（使用 slog）
-func ginLogger() gin.HandlerFunc {
+func (app *App) ginLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
@@ -299,21 +341,24 @@ func ginLogger() gin.HandlerFunc {
 			fields = append(fields, "query", raw)
 		}
 
+		// 使用 With 添加字段
+		logger := app.logger.With(fields...)
+
 		if c.Writer.Status() >= http.StatusInternalServerError {
-			logger.Error("HTTP 请求", fields...)
+			logger.Error("HTTP 请求")
 		} else if c.Writer.Status() >= http.StatusBadRequest {
-			logger.Warn("HTTP 请求", fields...)
+			logger.Warn("HTTP 请求")
 		} else {
-			logger.Info("HTTP 请求", fields...)
+			logger.Info("HTTP 请求")
 		}
 	}
 }
 
 // videoHandler 处理视频数据写入
-func videoHandler(c *gin.Context) {
+func (app *App) videoHandler(c *gin.Context) {
 	var req VideoRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		logger.Warn("请求验证失败", "error", err)
+		app.logger.Warn("请求验证失败", "error", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid request body: " + err.Error(),
 		})
@@ -327,7 +372,7 @@ func videoHandler(c *gin.Context) {
 		UserAgent: req.UserAgent,
 	})
 	if err != nil {
-		logger.Error("序列化数据失败", "error", err)
+		app.logger.Error("序列化数据失败", "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to marshal data",
 		})
@@ -337,11 +382,11 @@ func videoHandler(c *gin.Context) {
 	jsonData = append(jsonData, '\n')
 
 	if getEnv("DEBUG", "false") == "true" {
-		logger.Debug("处理请求", "project", req.Project, "event", req.Event)
+		app.logger.Debug("处理请求", "project", req.Project, "event", req.Event)
 	}
 
-	if err := writeToDoris(jsonData); err != nil {
-		logger.Error("写入 Doris 失败", "error", err)
+	if err := app.dorisClient.WriteToDoris(c.Request.Context(), jsonData, app.logger); err != nil {
+		app.logger.Error("写入 Doris 失败", "error", err)
 		c.JSON(http.StatusBadGateway, gin.H{
 			"error": fmt.Sprintf("Doris connection failed: %v", err),
 		})
@@ -355,34 +400,41 @@ func videoHandler(c *gin.Context) {
 
 func main() {
 	// 初始化日志记录器
-	initLogger()
+	logger := initLogger()
 
-	var err error
-	config, err = loadConfig()
+	// 加载配置
+	cfg, err := loadConfig()
 	if err != nil {
 		logger.Error("配置错误", "error", err)
 		os.Exit(1)
 	}
 
+	// 创建应用实例
+	app := &App{
+		config:      cfg,
+		logger:      logger,
+		dorisClient: NewDorisClient(cfg),
+	}
+
 	// 打印配置信息
 	logger.Info("Doris 配置",
-		"be_http", config.BEHTTP,
-		"database", config.DB,
-		"user", config.User,
-		"password", maskPassword(config.Passwd),
+		"be_http", cfg.BEHTTP,
+		"database", cfg.DB,
+		"user", cfg.User,
+		"password", maskPassword(cfg.Passwd),
 		"table", videoTable)
 
 	// 设置路由
-	router := setupRouter()
+	router := app.setupRouter()
 
 	// 创建 HTTP 服务器
 	srv := &http.Server{
 		Addr:           listenPort,
 		Handler:        router,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   30 * time.Second,
-		IdleTimeout:    120 * time.Second,
-		MaxHeaderBytes: 1 << 20, // 1MB
+		ReadTimeout:    readTimeout,
+		WriteTimeout:   writeTimeout,
+		IdleTimeout:    idleTimeout,
+		MaxHeaderBytes: maxHeaderBytes,
 	}
 
 	// 在 goroutine 中启动服务器
@@ -402,7 +454,7 @@ func main() {
 	logger.Info("正在关闭服务器...")
 
 	// 创建超时上下文，用于优雅关闭
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
 	// 优雅关闭服务器
