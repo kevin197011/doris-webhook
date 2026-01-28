@@ -1,8 +1,7 @@
 {
-  "dashboard": {
-    "id": null,
-    "uid": "doris-video-metrics",
-    "title": "Video Metrics Dashboard",
+  "id": null,
+  "uid": "doris-video-metrics",
+  "title": "Video Metrics Dashboard",
     "tags": ["doris", "video", "metrics"],
     "style": "dark",
     "timezone": "browser",
@@ -17,11 +16,11 @@
         "title": "总事件数 - 时间序列",
         "targets": [
           {
-            "datasource": {"type": "mysql", "uid": "doris"},
+            "datasource": {"type": "mysql", "uid": "video-doris"},
             "editorMode": "code",
-            "format": "table",
+            "format": "time_series",
             "rawQuery": true,
-            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:%s') as time,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY time\nORDER BY time",
+            "rawSql": "SELECT\n  UNIX_TIMESTAMP(DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')) as time_sec,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')\nORDER BY time_sec",
             "refId": "A",
             "sql": {
               "columns": [
@@ -78,11 +77,11 @@
         "title": "按项目分组 - 事件数",
         "targets": [
           {
-            "datasource": {"type": "mysql", "uid": "doris"},
+            "datasource": {"type": "mysql", "uid": "video-doris"},
             "editorMode": "code",
-            "format": "table",
+            "format": "time_series",
             "rawQuery": true,
-            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:%s') as time,\n  project as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY time, project\nORDER BY time, project",
+            "rawSql": "SELECT\n  UNIX_TIMESTAMP(DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')) as time_sec,\n  project as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00'), project\nORDER BY time_sec, project",
             "refId": "A"
           }
         ],
@@ -122,11 +121,11 @@
         "title": "按事件类型分组 - 事件数",
         "targets": [
           {
-            "datasource": {"type": "mysql", "uid": "doris"},
+            "datasource": {"type": "mysql", "uid": "video-doris"},
             "editorMode": "code",
-            "format": "table",
+            "format": "time_series",
             "rawQuery": true,
-            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:%s') as time,\n  event as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY time, event\nORDER BY time, event",
+            "rawSql": "SELECT\n  UNIX_TIMESTAMP(DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')) as time_sec,\n  event as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00'), event\nORDER BY time_sec, event",
             "refId": "A"
           }
         ],
@@ -166,11 +165,11 @@
         "title": "项目分布",
         "targets": [
           {
-            "datasource": {"type": "mysql", "uid": "doris"},
+            "datasource": {"type": "mysql", "uid": "video-doris"},
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT\n  project as label,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY project\nORDER BY value DESC",
+            "rawSql": "SELECT\n  project as label,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY project\nORDER BY value DESC",
             "refId": "A"
           }
         ],
@@ -192,11 +191,11 @@
         "title": "事件类型分布",
         "targets": [
           {
-            "datasource": {"type": "mysql", "uid": "doris"},
+            "datasource": {"type": "mysql", "uid": "video-doris"},
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT\n  event as label,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY event\nORDER BY value DESC",
+            "rawSql": "SELECT\n  event as label,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY event\nORDER BY value DESC",
             "refId": "A"
           }
         ],
@@ -218,11 +217,11 @@
         "title": "总事件数",
         "targets": [
           {
-            "datasource": {"type": "mysql", "uid": "doris"},
+            "datasource": {"type": "mysql", "uid": "video-doris"},
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT COUNT(*) as value FROM video_metrics WHERE $__timeFilter(event_time)",
+            "rawSql": "SELECT COUNT(*) as value FROM video_metrics WHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)",
             "refId": "A"
           }
         ],
@@ -259,11 +258,11 @@
         "title": "项目事件统计",
         "targets": [
           {
-            "datasource": {"type": "mysql", "uid": "doris"},
+            "datasource": {"type": "mysql", "uid": "video-doris"},
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT\n  project as '项目',\n  COUNT(*) as '事件数',\n  COUNT(DISTINCT event) as '事件类型数',\n  COUNT(DISTINCT user_agent) as '用户代理数'\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY project\nORDER BY COUNT(*) DESC",
+            "rawSql": "SELECT\n  project as '项目',\n  COUNT(*) as '事件数',\n  COUNT(DISTINCT event) as '事件类型数',\n  COUNT(DISTINCT user_agent) as '用户代理数'\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY project\nORDER BY COUNT(*) DESC",
             "refId": "A"
           }
         ],
@@ -279,11 +278,11 @@
         "title": "事件类型统计",
         "targets": [
           {
-            "datasource": {"type": "mysql", "uid": "doris"},
+            "datasource": {"type": "mysql", "uid": "video-doris"},
             "editorMode": "code",
             "format": "table",
             "rawQuery": true,
-            "rawSql": "SELECT\n  event as '事件类型',\n  COUNT(*) as '事件数',\n  COUNT(DISTINCT project) as '项目数',\n  ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM video_metrics WHERE $__timeFilter(event_time)), 2) as '占比(%)'\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY event\nORDER BY COUNT(*) DESC",
+            "rawSql": "SELECT\n  event as '事件类型',\n  COUNT(*) as '事件数',\n  COUNT(DISTINCT project) as '项目数',\n  ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM video_metrics WHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)), 2) as '占比(%)'\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY event\nORDER BY COUNT(*) DESC",
             "refId": "A"
           }
         ],
@@ -299,11 +298,11 @@
         "title": "项目 x 事件类型 - 热力图",
         "targets": [
           {
-            "datasource": {"type": "mysql", "uid": "doris"},
+            "datasource": {"type": "mysql", "uid": "video-doris"},
             "editorMode": "code",
-            "format": "table",
+            "format": "time_series",
             "rawQuery": true,
-            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:%s') as time,\n  CONCAT(project, ' - ', event) as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE $__timeFilter(event_time)\nGROUP BY time, project, event\nORDER BY time",
+            "rawSql": "SELECT\n  UNIX_TIMESTAMP(DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')) as time_sec,\n  CONCAT(project, ' - ', event) as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00'), project, event\nORDER BY time_sec",
             "refId": "A"
           }
         ],
@@ -347,7 +346,7 @@
         {
           "name": "project",
           "type": "query",
-          "datasource": {"type": "mysql", "uid": "doris"},
+          "datasource": {"type": "mysql", "uid": "video-doris"},
           "definition": "SELECT DISTINCT project FROM video_metrics ORDER BY project",
           "query": "SELECT DISTINCT project FROM video_metrics ORDER BY project",
           "current": {
@@ -367,7 +366,7 @@
         {
           "name": "event",
           "type": "query",
-          "datasource": {"type": "mysql", "uid": "doris"},
+          "datasource": {"type": "mysql", "uid": "video-doris"},
           "definition": "SELECT DISTINCT event FROM video_metrics ORDER BY event",
           "query": "SELECT DISTINCT event FROM video_metrics ORDER BY event",
           "current": {
@@ -395,5 +394,4 @@
     "links": [],
     "liveNow": false,
     "weekStart": ""
-  }
 }

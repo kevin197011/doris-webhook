@@ -403,8 +403,17 @@ func (app *App) videoHandler(c *gin.Context) {
 }
 
 func main() {
+	// 设置时区为香港时间（东八区）
+	loc, err := time.LoadLocation("Asia/Hong_Kong")
+	if err != nil {
+		// 如果加载失败，使用 FixedZone 设置为 UTC+8
+		loc = time.FixedZone("HKT", 8*3600)
+	}
+	time.Local = loc
+
 	// 初始化日志记录器
 	logger := initLogger()
+	logger.Info("时区设置", "timezone", time.Local.String())
 
 	// 加载配置
 	cfg, err := loadConfig()
