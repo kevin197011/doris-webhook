@@ -367,8 +367,8 @@ func (app *App) videoHandler(c *gin.Context) {
 	}
 
 	// 转换为 Doris 数据格式并序列化
-	// 使用当前时间作为事件时间
-	eventTime := time.Now().Format("2006-01-02 15:04:05")
+	// 使用当前时间作为事件时间，包含毫秒精度
+	eventTime := time.Now().Format("2006-01-02 15:04:05.000")
 	jsonData, err := json.Marshal(VideoData{
 		Project:   req.Project,
 		Event:     req.Event,

@@ -20,7 +20,7 @@
             "editorMode": "code",
             "format": "time_series",
             "rawQuery": true,
-            "rawSql": "SELECT\n  UNIX_TIMESTAMP(DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')) as time_sec,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')\nORDER BY time_sec",
+            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00') as time_sec,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')\nORDER BY time_sec",
             "refId": "A",
             "sql": {
               "columns": [
@@ -81,7 +81,7 @@
             "editorMode": "code",
             "format": "time_series",
             "rawQuery": true,
-            "rawSql": "SELECT\n  UNIX_TIMESTAMP(DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')) as time_sec,\n  project as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00'), project\nORDER BY time_sec, project",
+            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00') as time_sec,\n  project as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00'), project\nORDER BY time_sec, project",
             "refId": "A"
           }
         ],
@@ -125,7 +125,7 @@
             "editorMode": "code",
             "format": "time_series",
             "rawQuery": true,
-            "rawSql": "SELECT\n  UNIX_TIMESTAMP(DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')) as time_sec,\n  event as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00'), event\nORDER BY time_sec, event",
+            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00') as time_sec,\n  event as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00'), event\nORDER BY time_sec, event",
             "refId": "A"
           }
         ],
@@ -302,7 +302,7 @@
             "editorMode": "code",
             "format": "time_series",
             "rawQuery": true,
-            "rawSql": "SELECT\n  UNIX_TIMESTAMP(DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00')) as time_sec,\n  CONCAT(project, ' - ', event) as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00'), project, event\nORDER BY time_sec",
+            "rawSql": "SELECT\n  DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00') as time_sec,\n  CONCAT(project, ' - ', event) as metric,\n  COUNT(*) as value\nFROM video_metrics\nWHERE event_time >= FROM_UNIXTIME($__from/1000) AND event_time <= FROM_UNIXTIME($__to/1000)\nGROUP BY DATE_FORMAT(event_time, '%Y-%m-%d %H:%i:00'), project, event\nORDER BY time_sec",
             "refId": "A"
           }
         ],
