@@ -32,3 +32,5 @@ go.work.sum
 # .vscode/
 
 .cursor
+t.sh
+t.rb

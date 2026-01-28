@@ -1,9 +1,9 @@
 services:
   doris-webhook:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
-    image: ghcr.io/kevin197011/doris-webhook:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # image: ghcr.io/kevin197011/doris-webhook:latest
     container_name: doris-webhook
     ports:
       - "8080:8080"
